@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -252,3 +253,11 @@ int main(int argc, char **argv)
     free(B);
     free(X);
 }
+=======
+#include <stdio.h>
+
+
+int main(int argc, char *argv[]) {
+
+}
+>>>>>>> 7b5478087713f6524988830457ed5f5fe5467075
