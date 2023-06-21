@@ -5,7 +5,6 @@ A solução de sistemas de equações lineares é o problema central da álgebra
 
 Dentre os métodos disponíveis, o método de Jacobi é um dos métodos numéricos mais simples e fáceis de paralelizar, tornando-se atrativo para solução de sistemas de equações de grande porte.
 
-<p align="center">
-  <img src="./global/jacobi.png">
-</p>
+
+
 
