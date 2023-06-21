@@ -215,6 +215,7 @@ int main(int argc, char **argv)
                                   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 80, -12},
                                   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, 85}};
 
+
         double vectorB[13] = {11, 8, 13, 7, 12, 6, 10, 5, 9, 4, 8, 3, 7};
         for (i = 0; i < n; i++){
             B[i] = vectorB[i]; // Preencha o vetor B com os valores definidos
@@ -225,9 +226,6 @@ int main(int argc, char **argv)
 
     for (i = 0; i < n; i++)  
         X[i] = 0.0; // Inicialize o vetor X com zeros
-    
-
-    
 
     if (np == 1) inter = jacobi(A, B, X, n);
     else inter = jacobi_parallel(A, B, X, n, np);
