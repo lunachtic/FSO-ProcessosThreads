@@ -7,14 +7,12 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 
-#define MAX_ITERATIONS 1000
+#define MAX_ITERATIONS 100000
 #define EPSILON 1e-10
 
-int jacobi(double *x_new, double *x_old, double **A, double *b, double *x, int n){
+int jacobi(double *x_new, double **A, double *b, double *x, int n){
     int i, j, k;
     double sum, error;
-
-    memcpy(x_old, x, n * sizeof(double));// Copia o vetor inicial para o vetor antigo
 
     // Itera até a convergência ou até o número máximo de iterações ser atingido
     for (k = 0; k < MAX_ITERATIONS; k++){
@@ -23,86 +21,89 @@ int jacobi(double *x_new, double *x_old, double **A, double *b, double *x, int n
             sum = 0;
             for (j = 0; j < n; j++)
                 if (j != i)
-                    sum += A[i][j] * x_old[j];
+                    sum += A[i][j] * x[j];
             x_new[i] = (b[i] - sum) / A[i][i];
         }
-
         // Verifica a convergência
         error = 0;
         for (i = 0; i < n; i++)
-            error += fabs(x_old[i] - x_new[i]);
+            error += fabs(x[i] - x_new[i]);
 
         // Condição de convergência
-        if (error < EPSILON){
-            printf("Convergência alcançada em %d iterações.\n", k);
-            break;
-        }
-
+        if (error < EPSILON)break;
         // Copia o novo vetor para o vetor antigo
-        memcpy(x_old, x_new, n * sizeof(double));
+        memcpy(x, x_new, n * sizeof(double));
     }
     
     memcpy(x, x_new, n * sizeof(double));// Copia o vetor final para o vetor X
-    
     return k;// Retorna o número de iterações
 }
 
-int jacobi_parallel(double *x_new, double *x_old, double **A, double *b, double *x, int n, int np, int pid) {
+void jacobi_iteration(double *x_new, double *x_old, double **A, double *b, int start_index, int end_index, int n) {
+    int i, j;
+    double sum;
+    for (i = start_index; i < end_index; i++) {
+        sum = 0;
+        for (j = 0; j < n; j++) 
+            if (j != i) 
+                sum += A[i][j] * x_old[j];
+        x_new[i] = (b[i] - sum) / A[i][i];
+    }
+}
+
+int jacobi_paralelo(double *x_new, double *x_old, double **A, double *b, double *x, int n, int np, int pid, int id_seq) {
     int i, j, k, status;
     double sum, error;
 
-    memcpy(x_old, x, n * sizeof(double));// Copia o vetor inicial para o vetor antigo
-    
-    // Loop para as iterações do método Jacobi
+    int start_index = id_seq * (n / np);
+    int end_index = (id_seq == np - 1) ? n : (id_seq + 1) * (n / np);
+    memcpy(x_old + start_index, x + start_index, (end_index - start_index) * sizeof(double));
+
     for (k = 0; k < MAX_ITERATIONS; k++) {
-        if (pid == 0) {
-            // Processo filho
-            // Atualiza os elementos do vetor para o processo filho
-            for (i = i - 1; i < n; i += (np - 1)) {
-                sum = 0;
-                for (j = 0; j < n; j++) {
-                    if (j != i) {
-                        sum += A[i][j] * x_old[j];
-                    }
-                }
-                x_new[i] = (b[i] - sum) / A[i][i];
+        for (i = start_index; i < end_index; i++) {
+            sum = 0;
+            for (j = 0; j < n; j++){ 
+                if (j != i){sum += A[i][j] * x_old[j];}
             }
-
-            // Libera a memória compartilhada alocada para os vetores do processo filho
-            shmdt(x_new);
-            shmdt(x_old);
-
-            // Finaliza o processo filho
-            exit(0);
-        } else {
-            // Processo pai
-            for (i = 1; i < np; i++) 
-                wait(&status);// Aguarda a conclusão dos processos Pai
-
-            // Verifica a convergência
-            error = 0;
-            for (i = 0; i < n; i++) {
-                sum = 0;
-                for (j = 0; j < n; j++) 
-                    if (j != i) 
-                        sum += A[i][j] * x_old[j];
-                      
-                x_new[i] = (b[i] - sum) / A[i][i];
-                error += fabs(x_new[i] - x_old[i]);
-            }
-
-            // Condição de convergência
-            if (error < EPSILON) {
-                k++;
-                printf("Convergência alcançada após %d iterações.\n", k);
-                break;
-            }
-            memcpy(x_old, x_new, n * sizeof(double));// Copia o novo vetor para o vetor antigo// Copia o novo vetor para o vetor antigo
+            x_new[i] = (b[i] - sum) / A[i][i];
         }
-    }
-    memcpy(x, x_old, n * sizeof(double));// Copia o resultado final do vetor para o vetor de saída
 
-    return k;// Retorna o número de iterações
+        // Atualiza os valores dos processos filhos na memória compartilhada
+        memcpy(x + start_index, x_new, (end_index - start_index) * sizeof(double));
+
+        // Sincronização dos processos filhos
+        for (i = 1; i < np; i++) {
+            if (id_seq == 0) {wait(&status);}
+            if (id_seq == i) {exit(0);}
+        }
+
+        // Combinação dos valores dos processos filhos no processo pai
+        if (id_seq == 0) {
+            for (i = 1; i < np; i++) {
+                int child_start_index = i * (n / np);
+                int child_end_index = (i == np - 1) ? n : (i + 1) * (n / np);
+                memcpy(x + child_start_index, x_new + child_start_index, (child_end_index - child_start_index) * sizeof(double));
+            }
+        }
+
+        // Atualização dos vetores x_old e x_new para a próxima iteração
+        memcpy(x_old + start_index, x + start_index, (end_index - start_index) * sizeof(double));
+    
+        // Verifica a convergência a cada iteração
+        error = 0;
+        for (i = start_index; i < end_index; i++) {
+            sum = 0;
+            for (j = 0; j < n; j++) {
+                if (j != i) {sum += A[i][j] * x_old[j];}
+            }
+            x_new[i] = (b[i] - sum) / A[i][i];
+            error += fabs(x_new[i] - x_old[i]);
+        }
+
+        // Condição de convergência
+        if (error < EPSILON) {k++;break;}
+    }
+    return k;
 }
 
 void populadados(double **A,double *B,double *X,int n){
@@ -176,21 +177,21 @@ int main(int argc, char **argv)
     int n, np, i, j, inter;
     double **A, *B, *X, tempo_execucao;
     struct timeval start, end;
+    
+    int *matriz=(int *)malloc(3 * sizeof(int));
+    matriz[0]=4,matriz[1]=9, matriz[2]=13;
 
     // if ( argc != 3 ){
     //     printf("%s <num_ele> <num_proc>\n", argv[0]);
     //     exit(0);
     // }
     
-    do{
-        // Tamanho da matriz
+    do{//Pegar tamanho da matriz e numero de processadores de acordo com o Usuario
         printf("Digite o tamanho da matriz(4 ou 9 ou 13): ");
         scanf("%d", &n);
-        if (n != 4 && n != 9 && n != 13)
-            printf("Tamanho inválido.\n");
-        else break;
+        if (n != 4 && n != 9 && n != 13){printf("Tamanho inválido.\n");}
+        else {break;}
     }while(!(n == 4 || n == 9 || n == 13));
-    
     printf("Digite o número de processos (1 ou +): ");
     scanf("%d", &np);
 
@@ -198,24 +199,28 @@ int main(int argc, char **argv)
 
     // n = atoi(argv[1]);
     // np = atoi(argv[2]);
+
+    //Pegar todos os Dados de todas as tabelas de 1 a 4 processadores
+    //for(int count = 0; count<3; count++){\
+    //for(int np = 1; np<=4; np++){
+    //n=matriz[count];
     
     X = (double *)malloc(n * sizeof(double));// Aloca memória para o vetor X
     B = (double *)malloc(n * sizeof(double));// Aloca memória para o vetor B
     A = (double **)malloc(n * sizeof(double *));// Aloca memória para a matriz
-    for (i = 0; i < n; i++)
+    for (i = 0; i < n; i++){
         A[i] = (double *)malloc(n * sizeof(double));// Aloca memória para os elementos da matriz
+    }
+        
 
     populadados(A, B, X, n);         
 
     if (np == 1){
-        double *x_new = (double *)malloc(n * sizeof(double)), *x_old = (double *)malloc(n * sizeof(double));;// Aloca memória para os vetores novo e antigo
+        double *x_new = (double *)malloc(n * sizeof(double));// Aloca memória para os vetores novo e antigo
         
         gettimeofday(&start, NULL);// Início do cronômetro
-
-        inter = jacobi(x_new, x_old, A, B, X, n);
-
+        inter = jacobi(x_new, A, B, X, n);
         free(x_new);// Libera a memória alocada para os vetores
-        free(x_old);// Libera a memória alocada para os vetores
     }
     else{ 
         // Aloca memória compartilhada para os vetores novo e antigo
@@ -227,15 +232,12 @@ int main(int argc, char **argv)
         int id_seq = 0, pid;
         for(i=1; i<np;i++){
             pid = fork();
-            if ( pid == 0){
-                id_seq = i;
-                break;
-            } 
+            if ( pid == 0){id_seq = i;break;} 
         }
 
         gettimeofday(&start, NULL);// Início do cronômetro
 
-        inter = jacobi_parallel(x_new, x_old, A, B, X, n, np, pid);
+        inter = jacobi_paralelo(x_new, x_old, A, B, X, n, np, pid, id_seq);
 
         // Libera a memória compartilhada alocada para os vetores
         shmdt(x_new);
@@ -247,21 +249,19 @@ int main(int argc, char **argv)
 
     // Cálculo do tempo de execução em segundos
     tempo_execucao = (double)(end.tv_sec - start.tv_sec) + (double)(end.tv_usec - start.tv_usec) / 1000000.0;
-
+    printf("Convergência alcançada após %d iterações, com %d Processadores, para a matriz de tamanho %d.\n", inter, np, n);
     printf("Resultado final do vetor X:\n");
-    for (int i = 0; i < n; i++)
-    {
-        printf("%.2f ", X[i]);
-    }
+    for (int i = 0; i < n; i++){printf("%.2f ", X[i]);}
     printf("\n");
     printf("interacoes = %d\n", inter);
     printf("Tempo de execução: %.6f segundos\n", tempo_execucao);
     
     // Libera a memória alocada para os elementos da matriz
-    for (i = 0; i < n; i++)
-        free(A[i]);
+    for (i = 0; i < n; i++){free(A[i]);}
     // Libera a memória alocada para a matriz e Vetores
     free(A);
     free(B);
     free(X);
+    //}
+    //}   
 }
