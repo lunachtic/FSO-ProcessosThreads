@@ -39,18 +39,6 @@ int jacobi(double *x_new, double **A, double *b, double *x, int n){
     return k;// Retorna o número de iterações
 }
 
-void jacobi_iteration(double *x_new, double *x_old, double **A, double *b, int start_index, int end_index, int n) {
-    int i, j;
-    double sum;
-    for (i = start_index; i < end_index; i++) {
-        sum = 0;
-        for (j = 0; j < n; j++) 
-            if (j != i) 
-                sum += A[i][j] * x_old[j];
-        x_new[i] = (b[i] - sum) / A[i][i];
-    }
-}
-
 int jacobi_paralelo(double *x_new, double *x_old, double **A, double *b, double *x, int n, int np, int pid, int id_seq) {
     int i, j, k, status;
     double sum, error;
