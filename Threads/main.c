@@ -3,10 +3,10 @@
 
 #define NUM_THREADS 4
 
-// Function executed by each thread
+//Function executed by each thread
 void *thread_function(void *thread_arg) {
     int thread_id = *(int *)thread_arg;
-    printf("Hello from thread %d\n", thread_id);
+    //printf("Hello from thread %d\n", thread_id);
     pthread_exit(NULL);
 }
 
