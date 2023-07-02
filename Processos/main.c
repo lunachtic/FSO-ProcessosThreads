@@ -14,7 +14,7 @@ int jacobi(double *x_new, double **A, double *b, double *x, int n){
     int i, j, k;
     double sum, error;
 
-    // Itera até a convergência ou até o número máximo de iterações ser atingido
+// Itera até a convergência ou até o número máximo de iterações ser atingido
     for (k = 0; k < MAX_ITERATIONS; k++){
         // Atualiza os elementos do vetor
         for (i = 0; i < n; i++){
