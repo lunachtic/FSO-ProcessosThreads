@@ -39,59 +39,44 @@ int jacobi(double *x_new, double **A, double *b, double *x, int n){
     return k;// Retorna o número de iterações
 }
 
-int jacobi_paralelo(double *x_new, double *x_old, double **A, double *b, double *x, int n, int np, int pid, int id_seq) {
+int jacobi_paralelo(double *x_new, double **A, double *b, double *x, int n, int np) {
     int i, j, k, status;
     double sum, error;
 
-    int start_index = id_seq * (n / np);
-    int end_index = (id_seq == np - 1) ? n : (id_seq + 1) * (n / np);
-    memcpy(x_old + start_index, x + start_index, (end_index - start_index) * sizeof(double));
-
     for (k = 0; k < MAX_ITERATIONS; k++) {
+        // Loop para criar os processos filhos
+        int id_seq = 0, pid;
+        for(i=1; i<np;i++){
+            pid = fork();
+            if ( pid == 0){id_seq = i;break;} 
+        }
+        
+        int start_index = id_seq * (n / np);
+        int end_index = (id_seq == np - 1) ? n : (id_seq + 1) * (n / np);
+
         for (i = start_index; i < end_index; i++) {
             sum = 0;
             for (j = 0; j < n; j++){ 
-                if (j != i){sum += A[i][j] * x_old[j];}
+                if (j != i){sum += A[i][j] * x[j];}
             }
             x_new[i] = (b[i] - sum) / A[i][i];
         }
-
-        // Atualiza os valores dos processos filhos na memória compartilhada
-        memcpy(x + start_index, x_new, (end_index - start_index) * sizeof(double));
-
+       
         // Sincronização dos processos filhos
         for (i = 1; i < np; i++) {
             if (id_seq == 0) {wait(&status);}
             if (id_seq == i) {exit(0);}
         }
 
-        // Combinação dos valores dos processos filhos no processo pai
-        if (id_seq == 0) {
-            for (i = 1; i < np; i++) {
-                int child_start_index = i * (n / np);
-                int child_end_index = (i == np - 1) ? n : (i + 1) * (n / np);
-                memcpy(x + child_start_index, x_new + child_start_index, (child_end_index - child_start_index) * sizeof(double));
-            }
-        }
-
-        // Atualização dos vetores x_old e x_new para a próxima iteração
-        memcpy(x_old + start_index, x + start_index, (end_index - start_index) * sizeof(double));
-    
         // Verifica a convergência a cada iteração
         error = 0;
-        for (i = start_index; i < end_index; i++) {
-            sum = 0;
-            for (j = 0; j < n; j++) {
-                if (j != i) {sum += A[i][j] * x_old[j];}
-            }
-            x_new[i] = (b[i] - sum) / A[i][i];
-            error += fabs(x_new[i] - x_old[i]);
-        }
-
+        for (i = 0; i < n; i++){error += fabs(x[i] - x_new[i]);}
         // Condição de convergência
-        if (error < EPSILON) {k++;break;}
+        if (error < EPSILON) {break;}
+        memcpy(x, x_new, n * sizeof(double));//// Copia o novo vetor para o vetor antigo
     }
-    return k;
+    memcpy(x, x_new, n * sizeof(double));// Copia o vetor final para o vetor X
+    return k;// Retorna o número de iterações
 }
 
 void populadados(double **A,double *B,double *X,int n){
@@ -211,27 +196,17 @@ int main(int argc, char **argv)
         free(x_new);// Libera a memória alocada para os vetores
     }
     else{ 
-        // Aloca memória compartilhada para os vetores novo e antigo
+        // Aloca memória compartilhada para o vetore novo
         int shm_x_new = shmget(IPC_PRIVATE, n * sizeof(double), 0600 | IPC_CREAT);
-        int shm_x_old = shmget(IPC_PRIVATE, n * sizeof(double), 0600 | IPC_CREAT);
-        double *x_new = (double *)shmat(shm_x_new, NULL, 0), *x_old = (double *)shmat(shm_x_old, NULL, 0);
-
-        // Loop para criar os processos filhos
-        int id_seq = 0, pid;
-        for(i=1; i<np;i++){
-            pid = fork();
-            if ( pid == 0){id_seq = i;break;} 
-        }
+        double *x_new = (double *)shmat(shm_x_new, NULL, 0);
 
         gettimeofday(&start, NULL);// Início do cronômetro
 
-        inter = jacobi_paralelo(x_new, x_old, A, B, X, n, np, pid, id_seq);
+        inter = jacobi_paralelo(x_new, A, B, X, n, np);
 
-        // Libera a memória compartilhada alocada para os vetores
+        // Libera a memória compartilhada alocada
         shmdt(x_new);
-        shmdt(x_old);
         shmctl(shm_x_new, IPC_RMID, NULL);
-        shmctl(shm_x_old, IPC_RMID, NULL);
     }
     gettimeofday(&end, NULL);// Fim do cronômetro
 
