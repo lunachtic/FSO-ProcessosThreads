@@ -24,14 +24,11 @@ int jacobi(double *x_new, double **A, double *b, double *x, int n){
                     sum += A[i][j] * x[j];
             x_new[i] = (b[i] - sum) / A[i][i];
         }
-        // Verifica a convergência
+        
         error = 0;
-        for (i = 0; i < n; i++)
-            error += fabs(x[i] - x_new[i]);
-        // Condição de convergência
-        if (error < EPSILON)break;
-        // Copia o novo vetor para o vetor antigo
-        memcpy(x, x_new, n * sizeof(double));
+        for (i = 0; i < n; i++){error += fabs(x[i] - x_new[i]);}// Verifica a convergência a cada iteração
+        if (error < EPSILON) {break;}// Condição de convergência
+        memcpy(x, x_new, n * sizeof(double));//// Copia o novo vetor para o vetor antigo
     }
     memcpy(x, x_new, n * sizeof(double));// Copia o vetor final para o vetor X
     return k;// Retorna o número de iterações
@@ -66,11 +63,9 @@ int jacobi_paralelo(double *x_new, double **A, double *b, double *x, int n, int 
             if (id_seq == i) {exit(0);}
         }
 
-        // Verifica a convergência a cada iteração
         error = 0;
-        for (i = 0; i < n; i++){error += fabs(x[i] - x_new[i]);}
-        // Condição de convergência
-        if (error < EPSILON) {break;}
+        for (i = 0; i < n; i++){error += fabs(x[i] - x_new[i]);}// Verifica a convergência a cada iteração
+        if (error < EPSILON) {break;}// Condição de convergência
         memcpy(x, x_new, n * sizeof(double));//// Copia o novo vetor para o vetor antigo
     }
     memcpy(x, x_new, n * sizeof(double));// Copia o vetor final para o vetor X
