@@ -14,7 +14,7 @@ int jacobi(double *x_new, double **A, double *b, double *x, int n){
     int i, j, k;
     double sum, error;
 
-    // Itera até a convergência ou até o número máximo de iterações ser atingido
+// Itera até a convergência ou até o número máximo de iterações ser atingido
     for (k = 0; k < MAX_ITERATIONS; k++){
         // Atualiza os elementos do vetor
         for (i = 0; i < n; i++){
@@ -28,13 +28,11 @@ int jacobi(double *x_new, double **A, double *b, double *x, int n){
         error = 0;
         for (i = 0; i < n; i++)
             error += fabs(x[i] - x_new[i]);
-
         // Condição de convergência
         if (error < EPSILON)break;
         // Copia o novo vetor para o vetor antigo
         memcpy(x, x_new, n * sizeof(double));
     }
-    
     memcpy(x, x_new, n * sizeof(double));// Copia o vetor final para o vetor X
     return k;// Retorna o número de iterações
 }
@@ -88,7 +86,6 @@ void populadados(double **A,double *B,double *X,int n){
             {2, 12, 1, 0},
             {0, 3, 15, 1},
             {0, 0, 4, 20}};
-
         double vectorB[4] = {7, 8, 9, 10};
         for (i = 0; i < n; i++) {
             B[i] = vectorB[i]; // Preencha o vetor B com os valores definidos
@@ -107,7 +104,6 @@ void populadados(double **A,double *B,double *X,int n){
                                 {0, 0, 0, 0, 0, -1, 30, -3, 1},
                                 {0, 0, 0, 0, 0, 0, -2, 28, -2},
                                 {0, 0, 0, 0, 0, 0, 0, -1, 35}};
-
         double vectorB[9] = {9, 5, 8, 2, 7, 3, 6, 4, 1};
         for (i = 0; i < n; i++){
             B[i] = vectorB[i]; // Preencha o vetor B com os valores definidos
@@ -130,8 +126,6 @@ void populadados(double **A,double *B,double *X,int n){
                                   {0, 0, 0, 0, 0, 0, 0, 0, 0, -2, 75, -11, 11},
                                   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 80, -12},
                                   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, 85}};
-
-
         double vectorB[13] = {11, 8, 13, 7, 12, 6, 10, 5, 9, 4, 8, 3, 7};
         for (i = 0; i < n; i++){
             B[i] = vectorB[i]; // Preencha o vetor B com os valores definidos
@@ -139,7 +133,6 @@ void populadados(double **A,double *B,double *X,int n){
                 A[i][j] = matrixA[i][j]; // Preencha a matriz A com os valores definidos
         }
     }
-
     for (i = 0; i < n; i++)  
         X[i] = 0.0; // Inicialize o vetor X com zeros
 }
@@ -184,8 +177,6 @@ int main(int argc, char **argv)
     for (i = 0; i < n; i++){
         A[i] = (double *)malloc(n * sizeof(double));// Aloca memória para os elementos da matriz
     }
-        
-
     populadados(A, B, X, n);         
 
     if (np == 1){
