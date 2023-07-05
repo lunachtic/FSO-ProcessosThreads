@@ -35,12 +35,11 @@ int jacobi(double *x_new, double **A, double *b, double *x, int n){
 }
 
 int jacobi_paralelo(double *x_new, double **A, double *b, double *x, int n, int np) {
-    int i, j, k, status;
+    int i, j, k, status, id_seq = 0, pid;;
     double sum, error;
 
     for (k = 0; k < MAX_ITERATIONS; k++) {
         // Loop para criar os processos filhos
-        int id_seq = 0, pid;
         for(i=1; i<np;i++){
             pid = fork();
             if ( pid == 0){id_seq = i;break;} 
