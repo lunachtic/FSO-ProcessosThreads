@@ -20,31 +20,6 @@ struct PARAMETROS {
     int id_seq;
 };
 
-int jacobi(double *x_new, double **A, double *b, double *x, int n){
-    int i, j, k;
-    double sum, error;
-
-// Itera até a convergência ou até o número máximo de iterações ser atingido
-    for (k = 0; k < MAX_ITERATIONS; k++){
-        // Atualiza os elementos do vetor
-        for (i = 0; i < n; i++){
-            sum = 0;
-            for (j = 0; j < n; j++)
-                if (j != i)
-                    sum += A[i][j] * x[j];
-            x_new[i] = (b[i] - sum) / A[i][i];
-        }
-        
-        error = 0;
-        for (i = 0; i < n; i++){error += fabs(x[i] - x_new[i]);}// Verifica a convergência a cada iteração
-        if (error < EPSILON) {break;}// Condição de convergência
-        memcpy(x, x_new, n * sizeof(double));//// Copia o novo vetor para o vetor antigo
-    }
-    memcpy(x, x_new, n * sizeof(double));// Copia o vetor final para o vetor X
-    return k;// Retorna o número de iterações
-}
-
-
 void *thread_function(void *arg) {
     struct PARAMETROS *data = (struct PARAMETROS *)arg;
     double *x_new = data->x_new;
@@ -207,15 +182,8 @@ int main(int argc, char **argv)
     }
     populadados(A, B, X, n);         
     double *x_new = (double *)malloc(n * sizeof(double));// Aloca memória para os vetores novo
-    if (nt == 1){
-        gettimeofday(&start, NULL);// Início do cronômetro
-        inter = jacobi(x_new, A, B, X, n);
-    }
-    else{ 
-        
-        gettimeofday(&start, NULL);// Início do cronômetro
-        inter = jacobi_paralelo(x_new, A, B, X, n, nt);
-    }
+    gettimeofday(&start, NULL);// Início do cronômetro
+    inter = jacobi_paralelo(x_new, A, B, X, n, nt);
     free(x_new);// Libera a memória alocada para os vetores
     gettimeofday(&end, NULL);// Fim do cronômetro
 
