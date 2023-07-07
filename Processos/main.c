@@ -50,27 +50,26 @@ int jacobi(double *x_new, double **A, double *b, double *x, int n, int np) {
 
 void populadados(double **A,double *B,double *X,int n){
     int i, j;
-    // Preencher a matriz A com valores aleatórios
+    // Preencher a matriz A
     for (i = 0; i < n; i++) {
         double soma = 0.0;
         for (j = 0; j < n; j++) {
             if (i != j) {
-                A[i][j] = 1; // Valores entre 0 e 10 com uma casa decimal
+                A[i][j] = 1;
                 soma += abs(A[i][j]);
             }
         }
         A[i][i] = soma + 1.0; // Valor na diagonal principal para tornar a matriz diagonal dominante
     }
-    // Preencher o vetor B com valores aleatórios
+    // Preencher o vetor B
     for (i = 0; i < n; i++) {
-        B[i] = 1; // Valores entre 0 e 10 com uma casa decimal
+        B[i] = 1; 
     }
-    for (i = 0; i < n; i++)  
-        X[i] = 0.0; // Inicialize o vetor X com zeros
+    for (i = 0; i < n; i++) {X[i] = 0.0; // Inicialize o vetor X com zeros}    
 }
 
 void printVetor(double *v, int n){
-    for (int i = 0; i < n; i++){printf("%.2f ", v[i]);}
+    for (int i = 0; i < n; i++){printf("%f ", v[i]);}
     printf("\n");
 }
 /*-----------------------------------------------*/
@@ -98,7 +97,7 @@ int main(int argc, char **argv){
     for (i = 0; i < n; i++){
         A[i] = (double *)malloc(n * sizeof(double));// Aloca memória para os elementos da matriz
     }
-    populadados(A, B, X, n);         
+    populadados(A, B, X, n);
 
     // Aloca memória compartilhada para o vetore novo
     int shm_x_new = shmget(IPC_PRIVATE, n * sizeof(double), 0600 | IPC_CREAT);
@@ -118,7 +117,10 @@ int main(int argc, char **argv){
     tempo_execucao = (double)(end.tv_sec - start.tv_sec) + (double)(end.tv_usec - start.tv_usec) / 1000000.0;
     printf("Convergência alcançada após:\n %d iterações, \n Utilizando %d Processos, \n Tempo de execução: %.6f segundos,\n para a matriz de tamanho %d.\n", inter, np, tempo_execucao, n);
     //printf("Resultado final do vetor X:\n");
-    //printVetor(X, n);    
+    for(){
+
+    }
+    printVetor(X, n);    
     // Libera a memória alocada para os elementos da matriz
     for (i = 0; i < n; i++){free(A[i]);}
     // Libera a memória alocada para a matriz e Vetores
