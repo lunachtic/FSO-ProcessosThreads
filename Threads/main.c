@@ -81,61 +81,27 @@ int jacobi_paralelo(double *x_new, double **A, double *b, double *x, int n, int 
     return k;
 }
 
+void printVetor(double *v, int n){
+    for (int i = 0; i < n; i++){printf("%.2f ", v[i]);}
+    printf("\n");
+}
+
 void populadados(double **A,double *B,double *X,int n){
     int i, j;
-    if (n == 4){
-        // Inicialize os valores de A, b para a matriz 4x4
-        double matrixA[4][4] = {
-            {10, 1, 0, 0},
-            {2, 12, 1, 0},
-            {0, 3, 15, 1},
-            {0, 0, 4, 20}};
-        double vectorB[4] = {7, 8, 9, 10};
-        for (i = 0; i < n; i++) {
-            B[i] = vectorB[i]; // Preencha o vetor B com os valores definidos
-            for (j = 0; j < n; j++) 
-                A[i][j] = matrixA[i][j]; // Preencha a matriz A com os valores definidos
+    // Preencher a matriz A com valores aleatórios
+    for (i = 0; i < n; i++) {
+        double soma = 0.0;
+        for (j = 0; j < n; j++) {
+            if (i != j) {
+                A[i][j] = 1; // Valores entre 0 e 10 com uma casa decimal
+                soma += abs(A[i][j]);
+            }
         }
+        A[i][i] = soma + 1.0; // Valor na diagonal principal para tornar a matriz diagonal dominante
     }
-    else if (n == 9){
-        // Inicialize os valores de A, b para a matriz 9x9
-        double matrixA[9][9] = {{10, -1, 2, 0, 0, 0, 0, 0, 0},
-                                {1, 15, -2, 1, 0, 0, 0, 0, 0},
-                                {0, -3, 20, -1, 2, 0, 0, 0, 0},
-                                {0, 0, -2, 18, -3, 1, 0, 0, 0},
-                                {0, 0, 0, 1, 25, -4, 2, 0, 0},
-                                {0, 0, 0, 0, -2, 22, -1, 3, 0},
-                                {0, 0, 0, 0, 0, -1, 30, -3, 1},
-                                {0, 0, 0, 0, 0, 0, -2, 28, -2},
-                                {0, 0, 0, 0, 0, 0, 0, -1, 35}};
-        double vectorB[9] = {9, 5, 8, 2, 7, 3, 6, 4, 1};
-        for (i = 0; i < n; i++){
-            B[i] = vectorB[i]; // Preencha o vetor B com os valores definidos
-            for (j = 0; j < n; j++)
-                A[i][j] = matrixA[i][j]; // Preencha a matriz A com os valores definidos
-        }
-    }
-    else if (n == 13){
-        // Inicialize os valores de A, b para a matriz 13x13
-        double matrixA[13][13] = {{25, -2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                                  {1, 30, -3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                                  {0, -4, 35, -2, 3, 0, 0, 0, 0, 0, 0, 0, 0},
-                                  {0, 0, -3, 40, -4, 4, 0, 0, 0, 0, 0, 0, 0},
-                                  {0, 0, 0, -2, 45, -5, 5, 0, 0, 0, 0, 0, 0},
-                                  {0, 0, 0, 0, -1, 50, -6, 6, 0, 0, 0, 0, 0},
-                                  {0, 0, 0, 0, 0, -2, 55, -7, 7, 0, 0, 0, 0},
-                                  {0, 0, 0, 0, 0, 0, -3, 60, -8, 8, 0, 0, 0},
-                                  {0, 0, 0, 0, 0, 0, 0, -4, 65, -9, 9, 0, 0},
-                                  {0, 0, 0, 0, 0, 0, 0, 0, -3, 70, -10, 10, 0},
-                                  {0, 0, 0, 0, 0, 0, 0, 0, 0, -2, 75, -11, 11},
-                                  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 80, -12},
-                                  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, 85}};
-        double vectorB[13] = {11, 8, 13, 7, 12, 6, 10, 5, 9, 4, 8, 3, 7};
-        for (i = 0; i < n; i++){
-            B[i] = vectorB[i]; // Preencha o vetor B com os valores definidos
-            for (j = 0; j < n; j++)
-                A[i][j] = matrixA[i][j]; // Preencha a matriz A com os valores definidos
-        }
+    // Preencher o vetor B com valores aleatórios
+    for (i = 0; i < n; i++) {
+        B[i] = 1; // Valores entre 0 e 10 com uma casa decimal
     }
     for (i = 0; i < n; i++)  
         X[i] = 0.0; // Inicialize o vetor X com zeros
@@ -148,20 +114,17 @@ int main(int argc, char **argv)
     struct timeval start, end;
     
     int *matriz=(int *)malloc(3 * sizeof(int));
-    matriz[0]=4,matriz[1]=9, matriz[2]=13;
+    matriz[0]=800,matriz[1]=1000, matriz[2]=1200;
 
     // if ( argc != 3 ){
     //     printf("%s <num_ele> <num_proc>\n", argv[0]);
     //     exit(0);
     // }
     
-    do{//Pegar tamanho da matriz e numero de processadores de acordo com o Usuario
-        printf("Digite o tamanho da matriz(4 ou 9 ou 13): ");
-        scanf("%d", &n);
-        if (n != 4 && n != 9 && n != 13){printf("Tamanho inválido.\n");}
-        else {break;}
-    }while(!(n == 4 || n == 9 || n == 13));
-    printf("Digite o número de processos (1 ou +): ");
+    //Pegar tamanho da matriz e numero de processadores de acordo com o Usuario
+    printf("Digite o tamanho da matriz: ");
+    scanf("%d", &n);
+    printf("Digite o número de Threads (1 ou +): ");
     scanf("%d", &nt);
 
     //gettimeofday(&start, NULL);// Início do cronômetro
@@ -189,13 +152,9 @@ int main(int argc, char **argv)
 
     // Cálculo do tempo de execução em segundos
     tempo_execucao = (double)(end.tv_sec - start.tv_sec) + (double)(end.tv_usec - start.tv_usec) / 1000000.0;
-    printf("Convergência alcançada após %d iterações, com %d Processadores, para a matriz de tamanho %d.\n", inter, nt, n);
-    printf("Resultado final do vetor X:\n");
-    for (int i = 0; i < n; i++){printf("%.2f ", X[i]);}
-    printf("\n");
-    printf("interacoes = %d\n", inter);
-    printf("Tempo de execução: %.6f segundos\n", tempo_execucao);
-    
+    printf("Convergência alcançada após:\n %d iterações, \n Utilizando %d Threads, \n Tempo de execução: %.6f segundos,\n para a matriz de tamanho %d.\n", inter, nt, tempo_execucao, n);
+    //printf("Resultado final do vetor X:\n");
+    //printVetor(X, n);    
     // Libera a memória alocada para os elementos da matriz
     for (i = 0; i < n; i++){free(A[i]);}
     // Libera a memória alocada para a matriz e Vetores
