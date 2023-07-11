@@ -115,11 +115,6 @@ int main(int argc, char **argv)
     
     int *matriz=(int *)malloc(3 * sizeof(int));
     matriz[0]=800,matriz[1]=1000, matriz[2]=1200;
-
-    // if ( argc != 3 ){
-    //     printf("%s <num_ele> <num_proc>\n", argv[0]);
-    //     exit(0);
-    // }
     
     //Pegar tamanho da matriz e numero de processadores de acordo com o Usuario
     printf("Digite o tamanho da matriz: ");
@@ -129,10 +124,7 @@ int main(int argc, char **argv)
 
     //gettimeofday(&start, NULL);// Início do cronômetro
 
-    // n = atoi(argv[1]);
-    // nt = atoi(argv[2]);
-
-    //Pegar todos os Dados de todas as tabelas de 1 a 4 processadores
+    //Pegar todos os Dados de todas as tabelas de 1 a 4 Threads
     //for(int count = 0; count<3; count++){\
     //for(int nt = 1; nt<=4; nt++){
     //n=matriz[count];
