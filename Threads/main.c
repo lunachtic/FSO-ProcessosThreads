@@ -37,9 +37,7 @@ void *thread_function(void *arg) {
     for (int i = start_index; i < end_index; i++) {
         sum = 0;
         for (int j = 0; j < n; j++) {
-            if (j != i) {
-                sum += A[i][j] * x[j];
-            }
+            if (j != i) {sum += A[i][j] * x[j];}
         }
         x_new[i] = (b[i] - sum) / A[i][i];
     }
@@ -62,12 +60,10 @@ int jacobi_paralelo(double *x_new, double **A, double *b, double *x, int n, int 
             threadData[i].n = n;
             threadData[i].nt = nt;
             threadData[i].id_seq = i;
-
             pthread_create(&threads[i], NULL, thread_function, (void *)&threadData[i]);
         }
 
         for (i = 0; i < nt; i++) {pthread_join(threads[i], NULL);}
-
         error = 0;
         for (i = 0; i < n; i++){error += fabs(x[i] - x_new[i]);}// Verifica a convergência a cada iteração
         if (error < EPSILON) {
@@ -103,8 +99,7 @@ void populadados(double **A,double *B,double *X,int n){
     for (i = 0; i < n; i++) {
         B[i] = 1; // Valores entre 0 e 10 com uma casa decimal
     }
-    for (i = 0; i < n; i++)  
-        X[i] = 0.0; // Inicialize o vetor X com zeros
+    for (i = 0; i < n; i++){X[i] = 0.0;} // Inicialize o vetor X com zeros
 }
 /*-----------------------------------------------*/
 int main(int argc, char **argv)
@@ -132,9 +127,7 @@ int main(int argc, char **argv)
     X = (double *)malloc(n * sizeof(double));// Aloca memória para o vetor X
     B = (double *)malloc(n * sizeof(double));// Aloca memória para o vetor B
     A = (double **)malloc(n * sizeof(double *));// Aloca memória para a matriz
-    for (i = 0; i < n; i++){
-        A[i] = (double *)malloc(n * sizeof(double));// Aloca memória para os elementos da matriz
-    }
+    for (i = 0; i < n; i++){A[i] = (double *)malloc(n * sizeof(double));} // Aloca memória para os elementos da matriz
     populadados(A, B, X, n);         
     double *x_new = (double *)malloc(n * sizeof(double));// Aloca memória para os vetores novo
     gettimeofday(&start, NULL);// Início do cronômetro
