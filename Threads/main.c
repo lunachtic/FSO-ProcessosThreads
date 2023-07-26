@@ -102,15 +102,11 @@ void populadados(double **A,double *B,double *X,int n){
     for (i = 0; i < n; i++){X[i] = 0.0;} // Inicialize o vetor X com zeros
 }
 /*-----------------------------------------------*/
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv){
     int n, nt, i, j, inter;
     double **A, *B, *X, tempo_execucao;
     struct timeval start, end;
-    
-    int *matriz=(int *)malloc(3 * sizeof(int));
-    matriz[0]=800,matriz[1]=1000, matriz[2]=1200;
-    
+     
     //Pegar tamanho da matriz e numero de processadores de acordo com o Usuario
     printf("Digite o tamanho da matriz: ");
     scanf("%d", &n);
@@ -118,12 +114,6 @@ int main(int argc, char **argv)
     scanf("%d", &nt);
 
     //gettimeofday(&start, NULL);// Início do cronômetro
-
-    //Pegar todos os Dados de todas as tabelas de 1 a 4 Threads
-    //for(int count = 0; count<3; count++){\
-    //for(int nt = 1; nt<=4; nt++){
-    //n=matriz[count];
-    
     X = (double *)malloc(n * sizeof(double));// Aloca memória para o vetor X
     B = (double *)malloc(n * sizeof(double));// Aloca memória para o vetor B
     A = (double **)malloc(n * sizeof(double *));// Aloca memória para a matriz
@@ -146,6 +136,4 @@ int main(int argc, char **argv)
     free(A);
     free(B);
     free(X);
-    //}
-    //}   
 }
